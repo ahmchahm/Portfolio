@@ -1,0 +1,12 @@
+export { default as Hero } from './Hero';
+export { default as Projects } from './Projects';
+export { default as ProjectCard } from './ProjectCard';
+export { default as About } from './About';
+export { default as Contact } from './Contact';
+export { default as Footer } from './Footer';
+export { default as Navbar } from './Navbar';
+export { default as AnimatedCursor } from './AnimatedCursor';
+export { default as AnimatedBackground } from './AnimatedBackground';
+export { default as FloatingObjectsScene } from './FloatingObjectsScene';
+export { default as FloatingObject } from './FloatingObject';
+export { default as ParticlesScene } from './ParticlesScene';

@@ -1,78 +1,62 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import ProjectCard from '@/components/ProjectCard';
 
 interface Project {
-  id: number;
+  id: string | number;
   title: string;
   description: string;
   tags: string[];
-  image: string;
-  color: string;
-  link: string;
+  image?: string;
+  color?: string;
+  link?: string;
 }
 
-const projects: Project[] = [
-  {
-    id: 1,
-    title: 'Interactive 3D Store',
-    description: 'A full-featured e-commerce platform with 3D product visualization and AR preview capabilities.',
-    tags: ['Next.js', 'Three.js', 'React Three Fiber', 'Stripe'],
-    image: '🛒',
-    color: '#0ea5e9',
-    link: '#',
-  },
-  {
-    id: 2,
-    title: 'Data Visualization Dashboard',
-    description: 'Real-time analytics dashboard with stunning 3D data visualizations and interactive charts.',
-    tags: ['React', 'D3.js', 'Three.js', 'WebGL'],
-    image: '📊',
-    color: '#ec4899',
-    link: '#',
-  },
-  {
-    id: 3,
-    title: 'Immersive Portfolio',
-    description: 'Creative portfolio website with scroll-based animations and interactive 3D elements.',
-    tags: ['Next.js', 'Framer Motion', 'GSAP', 'Three.js'],
-    image: '🎨',
-    color: '#f59e0b',
-    link: '#',
-  },
-  {
-    id: 4,
-    title: 'Virtual World Explorer',
-    description: 'Explore interactive 3D environments with real-time physics and particle systems.',
-    tags: ['Three.js', 'Cannon.js', 'WebGL', 'React'],
-    image: '🌍',
-    color: '#06b6d4',
-    link: '#',
-  },
-  {
-    id: 5,
-    title: 'AI Chat Interface',
-    description: 'Modern chat application with AI integration and animated UI components.',
-    tags: ['Next.js', 'OpenAI', 'TypeScript', 'Tailwind'],
-    image: '🤖',
-    color: '#8b5cf6',
-    link: '#',
-  },
-  {
-    id: 6,
-    title: 'Real-time Collaboration Tool',
-    description: 'WebSocket-based collaborative editing platform with live cursor positions.',
-    tags: ['Next.js', 'WebSockets', 'Firebase', 'React'],
-    image: '👥',
-    color: '#10b981',
-    link: '#',
-  },
-];
+const palette = ['#0ea5e9', '#ec4899', '#f59e0b', '#06b6d4', '#8b5cf6', '#10b981'];
+
 
 const Projects = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Sanitize HTML to remove MS Office XML comments
+  const sanitizeHtml = (html: string) => {
+    return html
+      .replace(/<!--\[if gte mso \d+\]>[\s\S]*?<!\[endif\]-->/g, '') // Remove MS Office conditionals
+      .replace(/<!--[\s\S]*?-->/g, '') // Remove all HTML comments
+      .replace(/<o:\w+[^>]*>/g, '') // Remove Office namespace tags
+      .trim();
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const res = await fetch('/api/projects');
+        const data = await res.json();
+        if (!mounted) return;
+        const mapped = (data.projects || []).map((p, i) => ({
+          id: p.id,
+          title: p.title,
+          description: sanitizeHtml(p.description || ''),
+          tags: p.technologies || [],
+          image: p.image || '🧩',
+          color: palette[i % palette.length],
+          link: p.demo || p.github || '#'
+        }));
+        setProjects(mapped);
+      } catch (err) {
+        console.error('Failed to load projects', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -125,14 +109,20 @@ const Projects = () => {
           whileInView="visible"
           viewport={{ once: true }}
         >
-          {projects.map((project) => (
-            <motion.div key={project.id} variants={itemVariants}>
-              <ProjectCard
-                project={project}
-                onSelect={() => setSelectedProject(project)}
-              />
-            </motion.div>
-          ))}
+        {loading ? (
+            <div className="col-span-full text-center text-gray-400">Loading projects...</div>
+          ) : projects.length === 0 ? (
+            <div className="col-span-full text-center text-gray-400 py-12">No projects found</div>
+          ) : (
+            projects.map((project) => (
+              <motion.div key={project.id} variants={itemVariants}>
+                <ProjectCard
+                  project={project}
+                  onSelect={() => setSelectedProject(project)}
+                />
+              </motion.div>
+            ))
+          )}
         </motion.div>
       </div>
 
@@ -146,34 +136,36 @@ const Projects = () => {
           onClick={() => setSelectedProject(null)}
         >
           <motion.div
-            className="bg-dark-800 rounded-xl max-w-2xl w-full p-8 border border-primary-500/20"
+            className="bg-dark-800 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 border border-primary-500/20"
             dir="ltr"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between mb-4" dir="ltr">
-              <div>
-                <div
-                  className="text-6xl mb-4"
-                  style={{ filter: 'drop-shadow(0 0 10px ' + selectedProject.color + ')' }}
-                >
-                  {selectedProject.image}
-                </div>
-                <h3 className="text-3xl font-bold mb-2">{selectedProject.title}</h3>
+            <div className="flex items-start justify-between mb-4 gap-4" dir="ltr">
+              <div className="flex-1">
+                {selectedProject.image && (typeof selectedProject.image === 'string' && (selectedProject.image.startsWith('http') || selectedProject.image.startsWith('data:')) ? (
+                  <img src={selectedProject.image} alt={selectedProject.title} className="w-full h-48 object-cover rounded-lg mb-4" />
+                ) : (
+                  <div
+                    className="text-6xl mb-4"
+                    style={{ filter: `drop-shadow(0 0 10px ${selectedProject.color})` }}
+                  >
+                    {selectedProject.image}
+                  </div>
+                ))}
+                <h3 className="text-2xl md:text-3xl font-bold mb-2">{selectedProject.title}</h3>
               </div>
               <button
                 onClick={() => setSelectedProject(null)}
-                className="text-gray-400 hover:text-white text-2xl"
+                className="text-gray-400 hover:text-white text-2xl flex-shrink-0"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-              {selectedProject.description}
-            </p>
+            <div className="text-gray-300 mb-6 text-base md:text-lg leading-relaxed prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: selectedProject.description }} />
 
             <div className="flex flex-wrap gap-2 mb-6">
               {selectedProject.tags.map((tag) => (
@@ -186,7 +178,7 @@ const Projects = () => {
               ))}
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-col md:flex-row">
               <motion.button
                 className="flex-1 px-6 py-3 rounded-lg bg-gradient-to-r from-primary-500 to-accent-500 text-white font-semibold"
                 whileHover={{ scale: 1.05 }}

@@ -78,11 +78,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) => {
         />
 
         <div className="relative z-10">
-          <div
-            className="text-6xl mb-4 drop-shadow-lg"
-            style={{ filter: `drop-shadow(0 0 15px ${project.color})` }}
-          >
-            {project.image}
+          <div className="mb-4">
+            {project.image && (typeof project.image === 'string' && (project.image.startsWith('http') || project.image.startsWith('data:')) ? (
+              <img src={project.image} alt={project.title} className="w-full h-40 object-cover rounded-lg mb-4" />
+            ) : (
+              <div
+                className="text-6xl mb-4 drop-shadow-lg"
+                style={{ filter: `drop-shadow(0 0 15px ${project.color})` }}
+              >
+                {project.image}
+              </div>
+            ))}
           </div>
           <h3 className="text-2xl font-bold mb-2">{project.title}</h3>
           <p className="text-gray-300 text-sm line-clamp-2">{project.description}</p>
@@ -130,16 +136,30 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) => {
           </div>
         </div>
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(project);
-            setIsFlipped(false);
-          }}
-          className="relative z-10 w-full px-4 py-2 rounded-lg bg-gradient-to-r from-primary-500 to-accent-500 text-white font-semibold hover:shadow-neon-lg transition-all"
-        >
-          View Details
-        </button>
+        <div className="relative z-10 w-full flex gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(project);
+              setIsFlipped(false);
+            }}
+            className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-primary-500 to-accent-500 text-white font-semibold hover:shadow-neon-lg transition-all"
+          >
+            View Details
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              // open the full project details page in a new tab
+              if (typeof window !== 'undefined') {
+                window.open(`/projects/${project.id}`, '_blank');
+              }
+            }}
+            className="flex-1 px-4 py-2 rounded-lg border border-primary-500/20 text-primary-400 hover:bg-primary-500/10 transition-all"
+          >
+            Open Project
+          </button>
+        </div>
       </motion.div>
     </motion.div>
   );

@@ -16,12 +16,25 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Simulate form submission
     setSubmitted(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) {
+        console.error('Failed to send message');
+      }
+      // optionally you could show error notification
+    } catch (err) {
+      console.error('Network error sending message', err);
+    } finally {
       setFormData({ name: '', email: '', message: '' });
-      setSubmitted(false);
-    }, 3000);
+      setTimeout(() => {
+        setSubmitted(false);
+      }, 3000);
+    }
   };
 
   const contactMethods = [

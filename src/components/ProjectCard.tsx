@@ -4,13 +4,13 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 interface Project {
-  id: number;
+  id: string | number;
   title: string;
   description: string;
   tags: string[];
-  image: string;
-  color: string;
-  link: string;
+  image?: string;
+  color?: string;
+  link?: string;
 }
 
 interface ProjectCardProps {

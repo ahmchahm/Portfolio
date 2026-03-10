@@ -10,10 +10,10 @@ const ParticlesGeometry = () => {
   const ref = useRef<any>(null);
   const sphere = useMemo(() => random.inSphere(new Float32Array(5000), { radius: 20 }), []);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (ref.current) {
-      ref.current.rotation.x -= state.delta / 10;
-      ref.current.rotation.y -= state.delta / 15;
+      ref.current.rotation.x -= delta / 10;
+      ref.current.rotation.y -= delta / 15;
     }
   });
 
